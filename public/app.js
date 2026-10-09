@@ -114,7 +114,7 @@ function pintarResultado({ proyecto, resumen, reporteUrl }) {
     const ul = crear('ul');
     for (const v of dep.vulnerabilidades) {
       const li = crear('li');
-      const puntaje = v.puntaje !== null ? ` (CVSS ${v.puntaje})` : '';
+      const puntaje = v.puntaje !== null ? ` (CVSS ${Number(v.puntaje).toFixed(1)})` : '';
       li.append(crear('span', SEVERIDAD[v.severidad] || v.severidad, v.severidad.toLowerCase()), `: ${v.nombre}${puntaje}`);
       ul.append(li);
     }

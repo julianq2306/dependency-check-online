@@ -10,11 +10,17 @@ const path = require('path');
 // ===== 2. Configuración =====
 const PORT = process.env.PORT || 3000;
 const DC_PATH = process.env.DC_PATH || '/usr/share/dependency-check/bin/dependency-check.sh';
-const NVD_API_KEY = process.env.NVD_API_KEY || '';
 const TRABAJOS = path.join(__dirname, 'trabajos'); // archivos subidos (temporales)
 const REPORTES = path.join(__dirname, 'reportes'); // reportes generados
 const EXTENSIONES = ['.zip', '.jar', '.war', '.json', '.xml', '.lock'];
 const MAX_DESCOMPRIMIDO = 100 * 1024 * 1024; // 100 MB, evita "zip bombs"
+
+// Espejo público de la base NVD, mantenido por el proyecto Dependency-Check (se actualiza cada 24 h).
+// Lo usamos en vez de la API de NVD porque esta suele responder 503 (servicio no disponible).
+const NVD_ESPEJO = 'https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz';
+
+// Argumentos comunes para todas las ejecuciones
+const ARGS_BASE = ['--disableOssIndex', '--disableAssembly'];
 
 fs.mkdirSync(TRABAJOS, { recursive: true });
 fs.mkdirSync(REPORTES, { recursive: true });
@@ -22,22 +28,18 @@ fs.mkdirSync(REPORTES, { recursive: true });
 // Estado global: la base NVD debe estar lista y solo se analiza un proyecto a la vez
 const estado = { baseLista: false, ocupado: false, mensaje: 'Actualizando la base de vulnerabilidades (NVD)' };
 
-// Argumentos comunes para todas las ejecuciones
-function argsBase() {
-  const args = ['--disableOssIndex', '--disableAssembly'];
-  if (NVD_API_KEY) args.push('--nvdApiKey', NVD_API_KEY);
-  return args;
-}
-
 // ===== 3. Descargar/actualizar la base de vulnerabilidades al iniciar =====
 function actualizarBase() {
   estado.baseLista = false;
   estado.mensaje = 'Actualizando la base de vulnerabilidades (NVD)';
-  console.log('Actualizando base NVD...');
-  execFile(DC_PATH, ['--updateonly', ...argsBase()], { maxBuffer: 50 * 1024 * 1024 }, (err, _out, stderr) => {
+  console.log('Actualizando base NVD desde el espejo...');
+
+  const args = ['--updateonly', '--nvdDatafeed', NVD_ESPEJO, ...ARGS_BASE];
+
+  execFile(DC_PATH, args, { maxBuffer: 50 * 1024 * 1024 }, (err, stdout, stderr) => {
     if (err) {
       estado.mensaje = 'No se pudo actualizar la base de vulnerabilidades. Revisa los logs del servidor.';
-      console.error(stderr || err.message);
+      console.error(stdout, stderr, err.message);
       return;
     }
     estado.baseLista = true;
@@ -140,16 +142,16 @@ app.post('/api/analizar', (req, res, next) => {
     '--format', 'HTML',
     '--format', 'JSON',
     '--noupdate', // la base ya se actualizó al iniciar
-    ...argsBase()
+    ...ARGS_BASE
   ];
 
-  execFile(DC_PATH, args, { timeout: 10 * 60 * 1000, maxBuffer: 50 * 1024 * 1024 }, (err, _out, stderr) => {
+  execFile(DC_PATH, args, { timeout: 10 * 60 * 1000, maxBuffer: 50 * 1024 * 1024 }, (err, stdout, stderr) => {
     estado.ocupado = false;
     fs.rmSync(carpeta, { recursive: true, force: true }); // borramos el código subido
 
     const rutaJson = path.join(salida, 'dependency-check-report.json');
     if (err && !fs.existsSync(rutaJson)) {
-      console.error(stderr || err.message);
+      console.error(stdout, stderr, err.message);
       return res.status(500).json({ error: 'Dependency-Check no pudo completar el análisis' });
     }
     res.json({
