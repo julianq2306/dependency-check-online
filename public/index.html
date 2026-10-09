@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dependency-Check en línea</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="contenedor">
+    <header class="encabezado">
+      <h1>¿Tus dependencias tienen vulnerabilidades conocidas?</h1>
+      <p>Sube tu proyecto y lo revisamos con OWASP Dependency-Check contra la base de vulnerabilidades del NIST (NVD).</p>
+      <p id="estado" class="estado" role="status">Consultando el servidor…</p>
+    </header>
+
+    <form id="formulario" class="formulario">
+      <label for="proyecto">Nombre del proyecto</label>
+      <input id="proyecto" name="proyecto" type="text" maxlength="50" placeholder="Mi aplicación">
+
+      <label for="archivo" id="zona" class="zona">
+        <span id="zona-texto" class="zona-texto">Arrastra aquí tu archivo o haz clic para elegirlo</span>
+        <span class="zona-ayuda">.zip del proyecto, .jar, .war, package-lock.json, pom.xml o composer.lock (máx. 20 MB)</span>
+        <input id="archivo" name="archivo" type="file" accept=".zip,.jar,.war,.json,.xml,.lock">
+      </label>
+
+      <button id="boton" type="submit" disabled>Analizar dependencias</button>
+    </form>
+
+    <section id="resultado" class="resultado" hidden>
+      <h2 id="titulo-resultado"></h2>
+      <div id="barra" class="barra" aria-hidden="true"></div>
+      <ul id="conteo" class="conteo"></ul>
+      <div id="lista"></div>
+      <a id="enlace-reporte" class="enlace" target="_blank" rel="noopener">Abrir reporte completo de Dependency-Check</a>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

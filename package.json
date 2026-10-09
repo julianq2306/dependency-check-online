@@ -1,0 +1,14 @@
+{
+  "name": "dependency-check-online",
+  "version": "1.0.0",
+  "description": "Interfaz web para ejecutar OWASP Dependency-Check en línea",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "express": "^4.21.2",
+    "multer": "^2.0.2"
+  }
+}

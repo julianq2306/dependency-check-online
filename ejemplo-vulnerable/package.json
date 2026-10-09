@@ -1,0 +1,11 @@
+{
+  "name": "ejemplo-vulnerable",
+  "version": "1.0.0",
+  "description": "Proyecto de prueba con versiones antiguas y vulnerables a propósito",
+  "dependencies": {
+    "lodash": "4.17.4",
+    "express": "4.16.0",
+    "minimist": "1.2.0",
+    "jquery": "3.3.1"
+  }
+}
